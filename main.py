@@ -1,7 +1,42 @@
 import pygame, sys
 from pygame.locals import QUIT
+import pygame.freetype
 from Cameragroup import *
+from groq import Groq
+import os
 
+client = Groq(
+    api_key=os.environ.get("GROQ_API_KEY"),
+)
+
+def fetch_text():
+    full_prompt = f"""Imagine you a NPC for a pygame about bartending and your name is Mix the Crab. Max length is 10 words"""
+    response = client.chat.completions.create(
+        messages=[
+            {
+                "role": "user",
+                "content": full_prompt,
+            }
+        ],
+        model="llama3-8b-8192",
+    )
+    answer = response.choices[0].message.content
+    return answer
+
+def response(text):
+    full_prompt = f"""Imagine you a NPC for a pygame about bartending and your name is Mix the Crab. Respone to {text} Max length is 10 words"""
+    response = client.chat.completions.create(
+        messages=[
+            {
+                "role": "user",
+                "content": full_prompt,
+            }
+        ],
+        model="llama3-8b-8192",
+    )
+    answer = response.choices[0].message.content
+    return answer
+    
 display_text = ''
 
 class Bartender(pygame.sprite.Sprite):
@@ -64,13 +99,13 @@ pygame.event.set_grab(True)
 pygame.font.init()
 pygame.display.set_caption('Hello World!')
 pygame.font.init()
-font = pygame.freetype.SysFont(None, 36)
+font = pygame.freetype.SysFont(None, 16)
 camera_group = CameraGroup()
 player = Player((640, 360), camera_group)
 
 output_box = pygame.Rect(50, 50, WIDTH - 100, 100)
 output_color = BLUE
-output_text = display_text
+output_text = fetch_text()
 
 bartender = Bartender((450, 100), camera_group)
 
@@ -105,7 +140,7 @@ while True:
         if event.type == pygame.KEYDOWN:
             if active:
                 if event.key == pygame.K_RETURN:
-                    output_text = 'hello there'
+                    output_text = response(text)
                     text = ''
                 elif event.key == pygame.K_BACKSPACE:
                     text = text[:-1]
